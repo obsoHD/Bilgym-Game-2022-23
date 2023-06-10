@@ -13,6 +13,10 @@ size = (1280, 720)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Science Quiz: Battle Against the Teachers")
 
+# Initialize variables for the player's score and lives
+score = 0
+lives = 3
+
 # Create a list of questions and corresponding answers
 questions = [
     {
@@ -43,24 +47,20 @@ incorrect_sound = pygame.mixer.Sound("Repositary/incorrect-sound.wav")
 pygame.mixer.music.load("Repositary/background-music.mp3")
 pygame.mixer.music.play(-1)  # -1 for looping the music
 
-# Create a variable to control the restart loop
-restart = True
+playing = True
 
-while restart:
-    # Initialize variables for the player's score and lives
+while playing:
+    # Reset the game variables
     score = 0
     lives = 3
-
-    # Create a variable to control the game loop
     running = True
 
-    # Main game loop
+    # Your main game loop starts here
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        # (The rest of the game loop code)
         # Clear the screen with a custom background color
         background_color = (200, 200, 255)
         screen.fill(background_color)
@@ -76,8 +76,8 @@ while restart:
 
         # Draw the options available - see before
         for i, option in enumerate(current_question["options"]):
-            option_text = font.render(f"{chr(ord('A')+i)}) {option}", 1, text_color)
-            screen.blit(option_text, (50, 150+50*i))
+            option_text = font.render(f"{chr(ord('A') + i)}) {option}", 1, text_color)
+            screen.blit(option_text, (50, 150 + 50 * i))
 
         # Draw the score and lives
         score_text = font.render("Score: " + str(score), 1, text_color)
@@ -99,24 +99,32 @@ while restart:
                     if event.unicode.upper() in 'ABCD':
                         player_answer = event.unicode.upper()
                         break
+            else:
+                continue
+            break
 
-                # Check if the player's answer is correct or incorrect
-            if player_answer:
-                if current_question["options"][ord(player_answer) - ord('A')] == current_question["answer"]:
-                    print("Correct! You strike a blow to the teacher's ego!")
-                    correct_sound.play()
-                    score += 1  # increment the score if the answer is correct
-                    if score == len(questions):
-                        running = False
-                    else:
-                        print("Score:", score)
-                        print("Lives:", lives)
-                else:
-                    print("Incorrect. The teacher scoffs at your ignorance.")
-                    incorrect_sound.play()
-                    lives -= 1  # decrement the lives
-                    if lives <= 0:
-                        running = False
+        if not running:
+            break
+
+        # Check if the player's answer is correct or incorrect
+        if current_question["options"][ord(player_answer) - ord('A')] == current_question["answer"]:
+            feedback_text = font.render("Correct! You strike a blow to the teacher's ego!", 1, text_color)
+            screen.blit(feedback_text, (50, 350))
+            pygame.display.update()
+            time.sleep(1)
+            correct_sound.play()
+            score += 1  # increment the score if the answer is correct
+            if score == len(questions):
+                running = False
+        else:
+            feedback_text = font.render("Incorrect. The teacher scoffs at your ignorance.", 1, text_color)
+            screen.blit(feedback_text, (50, 350))
+            pygame.display.update()
+            time.sleep(1)
+            incorrect_sound.play()
+            lives -= 1  # decrement the lives
+            if lives <= 0:
+                running = False
 
         if not running:
             end_text = "Congratulations! You win!" if score == len(
@@ -128,18 +136,19 @@ while restart:
             play_again_text = font.render("Do you want to play again? (Y/N)", 1, (0, 0, 0))
             screen.blit(play_again_text, (50, 450))
             pygame.display.update()
-
-            restart = False
-            while not restart:
+            while True:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
-                        restart = False
+                        playing = False
                         break
                     if event.type == pygame.KEYDOWN:
                         if event.unicode.upper() == 'Y':
-                            restart = True
                             break
                         elif event.unicode.upper() == 'N':
-                            restart = False
-                            pygame.quit()
-                            quit()
+                            playing = False
+                            break
+                else:
+                    continue
+                break
+
+pygame.quit()
